@@ -6,13 +6,13 @@ const path = require('path');
 const PORT = 8888;
 
 const MIMETYPE = {
-	"txt": "text/plain",
-	"html": "text/html",
-	"css": "text/css",
+    "txt": "text/plain",
+    "html": "text/html",
+    "css": "text/css",
     "js": "application/javascript",
-	"json": "application/json",
-	"svg": "image/svg+xml",
-	"ico": "image/x-icon",
+    "json": "application/json",
+    "svg": "image/svg+xml",
+    "ico": "image/x-icon",
 };
 
 const server = http.createServer();
@@ -21,9 +21,12 @@ server.on("request", async (req, res) => {
 
     try {
 
-        let resource = url.parse(req.url).pathname.split("/").pop() || "index.html";
+        const pathName = url.parse(req.url).pathname;
+        let resource = (pathName === "/") ? "index.html" : url.parse(req.url).pathname.replace(/\/$/, "").split("/").pop();
         const resourcePath = path.join("PUBLIC", resource);
-        
+
+        res.setHeader("Access-Control-Allow-Origin", "*");
+  
         /* PUBLIC */
         if (resource.includes(".") && fs.existsSync(resourcePath)) {
             const extn = resourcePath.split(".").pop();
@@ -52,12 +55,18 @@ server.on("request", async (req, res) => {
             const rawJsonData = fs.readFileSync(jsonPath, 'utf8');
             const parsedJsonData = JSON.parse(rawJsonData);
             const stringifiedJsonData = JSON.stringify(parsedJsonData);
-            
-            // res.statusCode = 200;
-            // res.setHeader('Content-Type', 'application/json');
+
+            /* 
+                use this multiple times for setting multiple header values
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+            */
             res.writeHead(200, { 'Content-Type': 'application/json' });
 
-            // res.write(stringifiedJsonData);
+            /* 
+                use this for streams, like for sending files.
+                res.write(stringifiedJsonData);
+            */
             res.end(stringifiedJsonData);
             return;
         }
